@@ -1,4 +1,4 @@
-# Luana Damore — Cybersecurity Portfolio
+# Luana D'Amore — Cybersecurity Portfolio
 
 CS student at UZH (year 2), learning cybersecurity hands-on.
 
