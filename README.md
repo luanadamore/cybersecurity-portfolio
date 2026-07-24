@@ -48,6 +48,10 @@ Work in progress — added as completed.
 
 *Updated July 2026*
 
+# Flashcard Collection
+I have added my Anki importable Flashcards.txt file and the html for the preview for all study question.
+Each time i learn about a new topic or have a question I will add it to my flashcards.
+
 # Port Checker
 A bash script that checks whether ports 22, 80, and 443 are open or closed on a given target.
 
