@@ -48,3 +48,28 @@ Work in progress — added as completed.
 ---
 
 *Updated July 2026*
+
+# Port Checker
+A bash script that checks whether ports 22, 80, and 443 are open or closed on a given target.
+
+## Usage
+```bash
+./port-checker.sh <target>
+
+Example
+./port-checker.sh google.com
+
+Output
+Target: google.com
+-------------------
+[OPEN]   Port 22 (SSH)
+[CLOSED] Port 80 (HTTP)
+[OPEN]   Port 443 (HTTPS)
+
+How it works
+Uses /dev/tcp — a Linux built-in that attempts a TCP connection to a host and port without any external tools. Exit code 0 = open, anything else = closed.
+
+Ports checked
+22 =SSH (remote control)
+80 =HTTP (web, unencryped)
+443 =HTTPS (web, encrypted)
