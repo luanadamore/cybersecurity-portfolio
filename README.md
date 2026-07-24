@@ -1,9 +1,8 @@
 # Luana Damore — Cybersecurity Portfolio
 
-CS student at UZH (year 2), learning cybersecurity hands-on with the goal of landing a security internship in Switzerland.
+CS student at UZH (year 2), learning cybersecurity hands-on.
 
 Currently working through: Linux CLI, networking, web security, and AppSec labs.  
-Languages: English, German, French.
 
 ---
 
