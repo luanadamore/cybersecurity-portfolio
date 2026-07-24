@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flashcard Viewer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.5rem;
+      color: #7c3aed;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+
+    .controls {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .filter-btn {
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.15s;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+      background: #7c3aed;
+      color: white;
+      border-color: #7c3aed;
+    }
+
+    .stats {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+
+    .card:hover {
+      border-color: #7c3aed;
+      transform: translateY(-2px);
+    }
+
+    .card.flipped .card-front { display: none; }
+    .card:not(.flipped) .card-back { display: none; }
+
+    .card-front, .card-back {
+      padding: 1.25rem;
+    }
+
+    .card-front {
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card-question {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: #e2e8f0;
+      flex: 1;
+    }
+
+    .card-hint {
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: #475569;
+    }
+
+    .card-back {
+      background: #0f172a;
+      border-top: 1px solid #334155;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+    }
+
+    .card-back code {
+      background: #1e293b;
+      color: #a78bfa;
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.85em;
+    }
+
+    .card-back b { color: #f1f5f9; }
+
+    .tag-row {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-top: 0.75rem;
+    }
+
+    .tag {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      background: #312e81;
+      color: #a5b4fc;
+    }
+
+    .tag.linux { background: #14532d; color: #86efac; }
+    .tag.networking { background: #1e3a5f; color: #93c5fd; }
+    .tag.appsec { background: #7f1d1d; color: #fca5a5; }
+    .tag.concepts { background: #3b1f6e; color: #d8b4fe; }
+    .tag.blue-team { background: #164e63; color: #67e8f9; }
+    .tag.tools { background: #422006; color: #fdba74; }
+    .tag.mitre { background: #431407; color: #fb923c; }
+  </style>
+</head>
+<body>
+
+<h1>Cybersecurity Flashcards</h1>
+<p class="subtitle">Click a card to reveal the answer</p>
+
+<div class="controls">
+  <button class="filter-btn active" onclick="filterCards('all')">All</button>
+  <button class="filter-btn" onclick="filterCards('linux')">Linux</button>
+  <button class="filter-btn" onclick="filterCards('networking')">Networking</button>
+  <button class="filter-btn" onclick="filterCards('appsec')">AppSec</button>
+  <button class="filter-btn" onclick="filterCards('concepts')">Concepts</button>
+  <button class="filter-btn" onclick="filterCards('blue-team')">Blue Team</button>
+  <button class="filter-btn" onclick="filterCards('tools')">Tools</button>
+  <button class="filter-btn" onclick="filterCards('mitre')">MITRE</button>
+</div>
+
+<p class="stats" id="stats"></p>
+
+<div class="card-grid" id="cardGrid"></div>
+
+<script>
+const cards = [
+  { q: "What is the CIA Triad?", a: "<b>Confidentiality</b> — only authorized users can access data<br><b>Integrity</b> — data is not altered without authorization<br><b>Availability</b> — systems are accessible when needed<br><br><i>Every security decision maps back to one or more of these.</i>", tags: ["concepts"] },
+  { q: "What is the difference between Authentication and Authorization?", a: "<b>Authentication</b> — proving WHO you are (username + password, MFA)<br><b>Authorization</b> — determining WHAT you are allowed to do (permissions, roles)<br><br><i>You can be authenticated but not authorized. Example: logged in but no admin rights.</i>", tags: ["concepts"] },
+  { q: "What are the 7 layers of the OSI model (top to bottom)?", a: "7 — Application (HTTP, DNS, FTP)<br>6 — Presentation (encryption, encoding)<br>5 — Session (sessions, authentication)<br>4 — Transport (TCP, UDP, ports)<br>3 — Network (IP, routing)<br>2 — Data Link (MAC addresses, switches)<br>1 — Physical (cables, signals)<br><br><i>Mnemonic (top→bottom): All People Seem To Need Data Processing</i>", tags: ["networking"] },
+  { q: "What is the TCP 3-way handshake?", a: "1. <b>SYN</b> — client sends synchronization request<br>2. <b>SYN-ACK</b> — server acknowledges and syncs back<br>3. <b>ACK</b> — client acknowledges<br><br>Connection is now established. Visible in Wireshark.", tags: ["networking"] },
+  { q: "What is the difference between IDS and IPS?", a: "<b>IDS</b> — monitors and <u>alerts</u>. Passive — does not block.<br><b>IPS</b> — monitors and <u>blocks</u>. Active — sits inline.<br><br><i>IDS = smoke alarm. IPS = sprinkler system.</i>", tags: ["concepts", "blue-team"] },
+  { q: "What is SQL Injection (SQLi)?", a: "Attacker inserts SQL code into an input to manipulate the database.<br><br><b>Payload:</b> <code>' OR 1=1--</code><br><b>Impact:</b> data theft, auth bypass, deletion<br><b>Fix:</b> parameterized queries", tags: ["appsec"] },
+  { q: "What is Cross-Site Scripting (XSS)?", a: "Attacker injects malicious JavaScript into a page viewed by others.<br><br><b>Types:</b> Reflected · Stored · DOM-based<br><b>Impact:</b> session hijacking, keylogging<br><b>Fix:</b> output encoding, CSP", tags: ["appsec"] },
+  { q: "What does MITRE ATT&CK stand for?", a: "<b>Adversarial Tactics, Techniques & Common Knowledge</b><br><br>• <b>Tactics</b> = the WHY (Initial Access, Persistence...)<br>• <b>Techniques</b> = the HOW (T1566 Phishing, T1078 Valid Accounts)", tags: ["mitre", "concepts"] },
+  { q: "Key ports to know by heart?", a: "<b>22</b> — SSH<br><b>25</b> — SMTP<br><b>53</b> — DNS<br><b>80</b> — HTTP<br><b>443</b> — HTTPS<br><b>445</b> — SMB<br><b>3306</b> — MySQL<br><b>3389</b> — RDP", tags: ["networking"] },
+  { q: "What is SSRF?", a: "<b>Server-Side Request Forgery</b> — tricks the server into making requests to unintended destinations.<br><br><b>Example:</b> change URL to <code>http://169.254.169.254/</code> (AWS metadata)<br><b>Fix:</b> URL allowlist", tags: ["appsec"] },
+  { q: "What is the Linux kernel?", a: "The core of the OS — middleman between hardware and software.<br><br>Manages: CPU, memory, storage, hardware.<br><br><i>Linux = kernel. Kali, Ubuntu, Parrot = distros built on top.</i>", tags: ["linux", "concepts"] },
+  { q: "What is a Linux distribution (distro)?", a: "Kernel + GNU tools + desktop + pre-installed software, packaged together.<br><br>• <b>Kali</b> — pentesting<br>• <b>Parrot</b> — lighter, privacy focused<br>• <b>Ubuntu</b> — general purpose", tags: ["linux", "concepts"] },
+  { q: "What does <code>pwd</code> do? (Print Working Directory)", a: "Shows your current location in the file system.<br><br><b>Output:</b> <code>/home/kali/Desktop</code><br><br>Path always starts from <code>/</code> (root).", tags: ["linux"] },
+  { q: "What does <code>ls</code> do with no flags?", a: "Lists files and folders in the current directory — but hides hidden files (files starting with <code>.</code>).", tags: ["linux"] },
+  { q: "What does <code>ls -a</code> do? What does the <code>-a</code> stand for?", a: "<code>-a</code> = <b>all</b><br><br>Shows ALL files including hidden ones (files starting with <code>.</code>).<br><br>You will always also see <code>.</code> (current dir) and <code>..</code> (parent dir).", tags: ["linux"] },
+  { q: "What does <code>ls -l</code> do? What does the <code>-l</code> stand for?", a: "<code>-l</code> = <b>long format</b><br><br>Shows detailed info for each file:<br><code>-rw-r--r-- 1 kali kali 33 Jul 2 readme</code><br><br>Columns: permissions · links · owner · group · size · date · filename", tags: ["linux"] },
+  { q: "What does <code>ls -la</code> do?", a: "Combines <code>-l</code> (long format) and <code>-a</code> (all files including hidden).<br><br>Most useful form of <code>ls</code> for security work — shows everything with full details.", tags: ["linux"] },
+  { q: "What does <code>cd foldername</code> do?", a: "Moves into the folder called <code>foldername</code> inside your current directory.<br><br><b>Example:</b> <code>cd Desktop</code> — moves into Desktop", tags: ["linux"] },
+  { q: "What does <code>cd ..</code> do?", a: "Moves <b>up one level</b> in the directory tree.<br><br><b>Example:</b> from <code>/home/kali/Desktop</code> → goes to <code>/home/kali</code><br><br><i>Note: space between cd and ..</i>", tags: ["linux"] },
+  { q: "What does <code>cd ~</code> do?", a: "Goes to your <b>home directory</b> from anywhere.<br><br><b>Example:</b> <code>cd ~</code> → takes you to <code>/home/kali</code><br><br>The tilde <code>~</code> always refers to the current user's home folder.", tags: ["linux"] },
+  { q: "What does <code>cd /</code> do?", a: "Goes to the <b>root</b> of the entire file system — the very top.<br><br>From here you can navigate anywhere using absolute paths:<br><code>cd /home/kali/Documents</code>", tags: ["linux"] },
+  { q: "What are key Linux root directories?", a: "<code>/home</code> — user home folders<br><code>/etc</code> — config files<br><code>/var</code> — logs and variable data<br><code>/tmp</code> — temporary files<br><code>/bin</code> — essential binaries", tags: ["linux"] },
+  { q: "What does <code>whoami</code> do?", a: "Prints the current logged-in username.<br><br><b>Output:</b> <code>kali</code><br><br>Important in security — confirms which user context you're in.", tags: ["linux"] },
+  { q: "What does <code>uname -a</code> do?", a: "Prints full system info: hostname, kernel version, architecture, OS.<br><br><b>Example:</b> <code>Linux kali 6.19.14 x86_64 GNU/Linux</code>", tags: ["linux"] },
+  { q: "What does <code>cat filename</code> do? (Concatenate)", a: "Prints the contents of a file to the screen.<br><br><b>Example:</b> <code>cat readme</code>", tags: ["linux"] },
+  { q: "What does <code>cat file1 file2</code> do?", a: "Prints both files to the screen one after the other.<br><br>Can also merge them: <code>cat file1 file2 > combined</code>", tags: ["linux"] },
+  { q: "What happens if you run <code>cat</code> with no filename?", a: "It waits for keyboard input — anything you type gets echoed back.<br><br>This is not an error, you just forgot the filename.<br><br>Press <b>Ctrl+C</b> to cancel.", tags: ["linux"] },
+  { q: "What is SSH? (Secure Shell)", a: "Protocol for securely connecting to a remote Linux machine. All traffic encrypted.<br><br><code>ssh username@hostname -p port</code><br><br>Default port: 22. First connect: type <code>yes</code> to accept fingerprint.", tags: ["linux", "tools"] },
+  { q: "What does <code>Ctrl+C</code> do?", a: "Cancels the running command and returns you to the prompt.<br><br>Use when: command is stuck, <code>cat</code> is waiting for input, any process you want to stop.", tags: ["linux"] },
+  { q: "How do you read a file starting with <code>-</code>?", a: "Use <code>./</code> before the filename:<br><code>cat ./-</code><br><br>Without <code>./</code> the shell thinks <code>-</code> is a flag.", tags: ["linux"] },
+  { q: "How do you read a file with spaces in the name?", a: "Wrap in quotes:<br><code>cat \"spaces in this filename\"</code><br><br>Without quotes, each word is treated as a separate argument.", tags: ["linux"] },
+  { q: "What does <code>--</code> do in a command?", a: "Signals end of flags — everything after is treated as a filename.<br><br><code>cat -- \"--file-with-dashes\"</code><br><br>Use when filename starts with <code>-</code> and <code>./</code> doesn't work.", tags: ["linux"] },
+  { q: "How do you show hidden files?", a: "<code>ls -a</code><br><br>Hidden files start with <code>.</code> and are invisible to plain <code>ls</code>.<br><br>Always see <code>.</code> (current dir) and <code>..</code> (parent dir) in output.", tags: ["linux"] },
+  { q: "What do <code>.</code> and <code>..</code> mean?", a: "<code>.</code> = current directory<br><code>..</code> = parent directory (one level up)<br><br>That's why <code>cd ..</code> goes up — you navigate into <code>..</code>", tags: ["linux"] },
+  { q: "What does the <code>file</code> command do?", a: "Tells you the type of data a file contains regardless of its name.<br><br><code>file somefile</code> → <code>ASCII text</code> / <code>data</code> / <code>ELF 64-bit executable</code><br><br><b>Tip:</b> <code>file ./*</code> checks all files at once.", tags: ["linux"] },
+  { q: "What does <code>grep \"word\" filename</code> do? (Global Regular Expression Print)", a: "Searches through a file and prints only lines containing the match.<br><br><b>Example:</b> <code>grep \"millionth\" data.txt</code> — finds the line with the word millionth", tags: ["linux"] },
+  { q: "What does <code>grep -i</code> do?", a: "<code>-i</code> = <b>case insensitive</b><br><br><code>grep -i \"password\" file</code> matches: Password, PASSWORD, passWORD...<br><br>Use when you're not sure how the text is capitalised.", tags: ["linux"] },
+  { q: "What does <code>grep -r</code> do?", a: "<code>-r</code> = <b>recursive</b><br><br><code>grep -r \"password\" .</code> — searches all files in current directory and all subfolders.<br><br>Very useful for finding hardcoded credentials across many files.", tags: ["linux"] },
+  { q: "What does <code>grep -n</code> do?", a: "<code>-n</code> = show <b>line numbers</b><br><br><code>grep -n \"error\" log.txt</code> → shows which line number each match is on.", tags: ["linux"] },
+  { q: "What does <code>grep -v</code> do?", a: "<code>-v</code> = <b>invert</b> — shows lines that do NOT match.<br><br><b>Example:</b> <code>grep -v \"Permission denied\" output.txt</code><br><br>Useful for filtering out noise.", tags: ["linux"] },
+  { q: "How do you hide Permission Denied errors in <code>find</code>?", a: "Add <code>2>/dev/null</code> to the end:<br><code>find / -name file 2>/dev/null</code><br><br><code>2></code> redirects errors. <code>/dev/null</code> discards them.", tags: ["linux"] },
+  { q: "What does <code>echo</code> do?", a: "Prints text to screen, or writes text into a file.<br><br><code>echo \"Hello\"</code> — print to screen<br><code>echo \"text\" > file</code> — write to file (overwrites)<br><code>echo \"text\" >> file</code> — append to file", tags: ["linux"] },
+  { q: "What is bash scripting?", a: "A script = file of commands that run automatically one after another.<br><br>Made of: commands + variables + logic (if/for/while)<br><br><b>Why useful:</b> automates repetitive tasks<br><b>Run:</b> <code>./script.sh</code><br><b>First line:</b> <code>#!/bin/bash</code>", tags: ["linux"] },
+  { q: "How do you clear the terminal screen?", a: "Press <b>Ctrl+L</b><br><br>Or type: <code>clear</code><br><br>History is not deleted — press ↑ to scroll back through past commands.", tags: ["linux"] },
+  { q: "What are the Linux shell operators?", a: "<code>&</code> — run command in <b>background</b><br><code>&&</code> — run second command only <b>if first succeeds</b><br><code>></code> — redirect output, <b>overwrites</b> file<br><code>>></code> — redirect output, <b>appends</b> to file", tags: ["linux"] },
+  { q: "What is the difference between <code>></code> and <code>>></code>?", a: "<code>></code> — overwrites the file (old content gone)<br><code>>></code> — appends (existing content kept)<br><br><code>echo \"line1\" > file</code> → file: <code>line1</code><br><code>echo \"line2\" >> file</code> → file: <code>line1 line2</code>", tags: ["linux"] },
+  { q: "EXERCISE: Replace contents of file 'passwords' with 'password123'", a: "<code>echo password123 > passwords</code><br><br><code>></code> overwrites the file completely.", tags: ["linux"] },
+  { q: "EXERCISE: Add 'tryhackme' to file 'passwords' without deleting 'password123'", a: "<code>echo tryhackme >> passwords</code><br><br><code>>></code> appends — existing content stays.", tags: ["linux"] },
+  { q: "What are the full names of common Linux commands?", a: "<code>pwd</code> — Print Working Directory<br><code>ls</code> — List<br><code>cd</code> — Change Directory<br><code>cat</code> — Concatenate<br><code>grep</code> — Global Regular Expression Print<br><code>ssh</code> — Secure Shell<br><code>chmod</code> — Change Mode<br><code>sudo</code> — Superuser Do<br><code>rm</code> — Remove<br><code>mv</code> — Move<br><code>cp</code> — Copy", tags: ["linux"] },
+  { q: "EXERCISE: You're on a server. You don't know where you are. What do you run?", a: "<code>pwd</code> — tells you your exact current location in the file system.", tags: ["linux"] },
+  { q: "EXERCISE: You suspect hidden config files in the current directory. What do you run?", a: "<code>ls -la</code><br><br>Shows hidden files (<code>-a</code>) with full details (<code>-l</code>) including permissions and owner.", tags: ["linux"] },
+  { q: "What is SSH, HTTP and HTTPS? Ports, encryption, key differences?", a: "<b>SSH — Port 22</b><br>Remote terminal access to another machine. Fully encrypted. Used by sysadmins and hackers.<br><br><b>HTTP — Port 80</b><br>Browser protocol to load websites. <u>Unencrypted</u> — traffic readable by anyone on the network. Never use for passwords.<br><br><b>HTTPS — Port 443</b><br>HTTP + TLS encryption. The padlock in the browser. Safe for passwords and sensitive data.<br><br><b>Security note:</b> login page on HTTP = vulnerability to report.", tags: ["networking", "concepts"] },
+  { q: "What is a port? What is the difference between open, closed and filtered?", a: "A <b>port</b> = a numbered endpoint on a server. IP address = the building, port = the apartment number.<br><br>Services listen on specific ports:<br>22 = SSH · 80 = HTTP · 443 = HTTPS · 3306 = MySQL<br><br><b>Open</b> — something is listening, ready to connect<br><b>Closed</b> — nothing listening, connection refused<br><b>Filtered</b> — firewall blocks it before you even reach the service<br><br><b>Why it matters:</b> open ports = attack surfaces. Port scanning = first step in any pentest.", tags: ["networking", "concepts"] },
+  { q: "What is the difference between: Terminal, Shell, Bash, Command Prompt, Console?", a: "<b>Terminal</b> — the window you open to type commands. Just the interface.<br><br><b>Shell</b> — the program inside the terminal that reads and runs your commands. Terminal = box, Shell = engine.<br><br><b>Bash</b> — one specific shell (Bourne Again Shell). Default on most Linux systems.<br><br><b>Other shells:</b> zsh (Kali/Mac) · fish · sh<br><br><b>Command Prompt (cmd.exe)</b> — Windows equivalent. Different syntax, less powerful.<br><br><b>Console</b> — old term, basically means terminal.", tags: ["linux", "concepts"] },
+  { q: "What is Bash? How is it different from Python? What is it used for in security?", a: "Bash = the default shell scripting language in Linux.<br><br>A bash script = a file of terminal commands that run automatically.<br><br><b>vs Python:</b> not compiled, runs line by line, built for OS interaction<br><br><b>Used in security for:</b> automating scans · parsing logs · quick exploit scripts · setting up environments", tags: ["linux"] },
+  { q: "Key elements of a bash script: shebang, variables, arrays, comments?", a: "<b>Shebang:</b> <code>#!/bin/bash</code> — first line, tells system to use bash<br><br><b>Variable:</b> <code>TARGET=$1</code> — $1 = first argument user types<br><br><b>Array:</b> <code>PORTS=(22 80 443)</code> — access with <code>${PORTS[0]}</code><br><br><b>Comment:</b> <code># ignored by the script</code>", tags: ["linux"] },
+  { q: "How does a <code>for</code> loop work in bash? What does <code>$?</code> mean?", a: "<b>For loop:</b><br><code>for i in 0 1 2; do</code><br><code>  echo ${PORTS[$i]}</code><br><code>done</code><br><br>Runs 3 times, once per value.<br><br><b>$?</b> = exit code of last command<br>• <code>0</code> = success · anything else = failure", tags: ["linux"] },
+  { q: "What is the <code>/dev/tcp</code> trick in Linux?", a: "Test if a port is open without any extra tools:<br><code>(echo >/dev/tcp/hostname/port) 2>/dev/null</code><br><br>• Port <b>open</b> → succeeds, exit code = 0<br>• Port <b>closed</b> → fails, exit code = 1", tags: ["linux", "tools"] },
+];
+
+let activeFilter = 'all';
+
+function filterCards(tag) {
+  activeFilter = tag;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderCards();
+}
+
+function renderCards() {
+  const grid = document.getElementById('cardGrid');
+  const filtered = activeFilter === 'all' ? cards : cards.filter(c => c.tags.includes(activeFilter));
+  document.getElementById('stats').textContent = `${filtered.length} card${filtered.length !== 1 ? 's' : ''}`;
+  grid.innerHTML = filtered.map((card, i) => `
+    <div class="card" onclick="this.classList.toggle('flipped')">
+      <div class="card-front">
+        <div class="card-question">${card.q}</div>
+        <div class="tag-row">${card.tags.map(t => `<span class="tag ${t}">${t}</span>`).join('')}</div>
+        <div class="card-hint">Click to reveal answer</div>
+      </div>
+      <div class="card-back">
+        ${card.a}
+        <div class="tag-row">${card.tags.map(t => `<span class="tag ${t}">${t}</span>`).join('')}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+renderCards();
+</script>
+</body>
+</html>
