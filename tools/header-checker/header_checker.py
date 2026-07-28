@@ -11,38 +11,34 @@ if len(sys.argv) < 2: # sys.argv is a list of command-line arguments
 
 url = sys.argv[1] # The URL to check
 
-HEADERS_TO_CHECK = [
-    "Strict-Transport-Security",
-    "Content-Security-Policy",
-    "X-Frame-Options",
-    "X-Content-Type-Options",
-    "Referrer-Policy",
-] # List of headers to check
-# strict-transport-security: Forces HTTPS, prevents downgrade attacks
-# content-security-policy: Prevents XSS by restricting what scripts can load
-# x-frame-options: Prevents clickjacking (site loaded in iframe)
-# x-content-type-options: Prevents MIME sniffing attacks
-# referrer-policy: Controls what URL info is sent to other sites
+HEADERS_TO_CHECK = {
+    "Strict-Transport-Security": "MISSING — site vulnerable to HTTPS downgrade attacks",
+    "Content-Security-Policy":   "MISSING — site vulnerable to XSS script injection",
+    "X-Frame-Options":           "MISSING — site vulnerable to clickjacking attacks",
+    "X-Content-Type-Options":    "MISSING — site vulnerable to MIME sniffing attacks",
+    "Referrer-Policy":           "MISSING — sensitive URLs may leak to third parties",
+}  # dictionary of headers to check, with a message for each header
 
 try:
-    response = requests.get(url) # Send a GET request to the URL, store the response in the response variable
-    response.raise_for_status() # Raise an exception for bad status codes
+    response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, allow_redirects=True, timeout=10) # Send a GET request to the URL, with a user agent, allow redirects, and a timeout of 10 seconds
+    response.raise_for_status() # Raise an exception for 4xx/5xx status codes
 except requests.exceptions.RequestException as e: # If an exception occurs, print the error and exit the program
     print(f"Error: {e}")
     sys.exit(1) # Exit the program
+
 print(f"\nChecking: {url}")
 print("=" * 50) # Print a separator line
 
 passed = 0 # Count the number of headers that are present
 
-for header in HEADERS_TO_CHECK: # Iterate over the headers-list to check
-    if header in response.headers: # response.headers is a dictionary of the headers sent by server, true or false
-        print(f"[PASS] {header}") # Print the header that is present
-        print(f"       {response.headers[header]}\n") # Print the value in dict of the header
+for header, fail_message in HEADERS_TO_CHECK.items():
+    if header in response.headers:
+        print(f"[PASS] {header}") # Print the header that is present    
+        print(f"       {response.headers[header]}\n") # Print the value of the header
         passed += 1 # Increment the count of headers that are present
     else:
         print(f"[FAIL] {header}") # Print the header that is not present
-        print(f"       Header not present\n") # Print the message that the header is not present
+        print(f"       {fail_message}\n") # Print the message that the header is not present, from the dictionary
 
 print("=" * 50) # Print a separator line
 print(f"Score: {passed}/{len(HEADERS_TO_CHECK)} headers present") # Print the score
