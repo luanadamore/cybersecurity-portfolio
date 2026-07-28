@@ -14,7 +14,6 @@ CS student at UZH (year 2), learning cybersecurity hands-on.
 | **In progress** | [Grundwissen Cybersecurity](https://www.linkedin.com/learning/paths/grundwissen-cybersecurity-bereitgestellt-von-microsoft-und-linkedin) (LinkedIn Learning) | Free path · ~6 hours · completion badge |
 | **In progress** | [Microsoft Cybersicherheit Grundwissen](https://www.linkedin.com/learning/paths/microsoft-cybersicherheit-grundwissen-mit-fachzertifikat-bereitgestellt-von-microsoft-und-linkedin) (LinkedIn Learning) | Free path · ~3 hours · completion badge |
 
-*Only listing courses I am actively completing or have finished. Paid options (Coursera Google Certificate, ISC2 CC) deferred — focusing on free resources for now.*
 
 ---
 
@@ -48,7 +47,7 @@ These are the sites I use to practice — profiles and labs linked where availab
 Importable Anki flashcards for cybersecurity learners — Linux, networking, AppSec, git, and more. I add new cards whenever I learn something worth remembering.
 
 **Files:**
-- [`flashcards.txt`](flashcards.txt) — import into [Anki](https://apps.ankiweb.net/)
+- [`flashcards.txt`](flashcards.txt) — import into [Anki] Flashcard Software
 - [`flashcards-viewer.html`](flashcards-viewer.html) — open in any browser for a quick preview (no Anki needed)
 
 ### How to use (Anki)
@@ -110,14 +109,6 @@ Uses `/dev/tcp` — a Linux built-in that attempts a TCP connection to a host an
 - Port state is inferred from whether the connection succeeds or fails
 - SSH (22) is often filtered on public hosts; 443 is almost always open on web servers
 - Good first portfolio script: small scope, clear output, easy to demo in an interview
-
----
-
-### Header Checker *(in progress)*
-
-Python script to audit HTTP security headers (HSTS, CSP, X-Frame-Options, etc.).
-
-**Location:** `tools/header-checker/` — coming soon
 
 ---
 
