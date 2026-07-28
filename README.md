@@ -70,7 +70,7 @@ Open `flashcards-viewer.html` in Chrome/Firefox. Click a card to flip. Use tag f
 
 A bash script that checks whether ports 22, 80, and 443 are open or closed on a given target.
 
-**Location:** `tools/port-checker.sh`
+**Location:** `port-checker.sh`
 
 **Usage**
 ```bash
